@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <!-- viewport-fit=cover permite usar toda la pantalla en iPhone (zona del notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Cesta, la compra de casa</title>
+  <meta name="description" content="Lista de la compra compartida de casa." />
+
+  <!-- Color de la barra del navegador según modo claro/oscuro -->
+  <meta name="theme-color" content="#FFFFFF" />
+
+  <!-- Para que se pueda "instalar" en el móvil como si fuera una app -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Cesta" />
+
+  <!-- Tipografías: Fredoka (redondita, para títulos) y Nunito (redondeada y cercana, para el texto) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ============ PANTALLA DE INICIO: ELEGIR PERFIL ============ -->
+  <!-- Es lo primero que se ve si este navegador aún no tiene perfil guardado -->
+  <section id="welcome" class="welcome" hidden aria-labelledby="welcome-title">
+    <div class="welcome-inner">
+      <span class="welcome-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M8 9.5V8a4 4 0 0 1 8 0v1.5"/><path d="M4 9.5h16l-1.6 9.1a2 2 0 0 1-2 1.7H7.6a2 2 0 0 1-2-1.7z"/><path d="M9.5 14.5l1.8 1.8 3.4-3.6"/></svg>
+      </span>
+      <h1 id="welcome-title" class="welcome-title">La compra de casa</h1>
+      <p class="welcome-sub">¿Quién eres?</p>
+      <div id="profile-list" class="profiles"></div>
+      <p class="welcome-note">Se queda guardado en este navegador. Puedes cerrar sesión cuando quieras desde tu inicial, arriba a la derecha.</p>
+    </div>
+  </section>
+
+  <div class="app">
+    <!-- ============ CABECERA ============ -->
+    <header class="top">
+      <span class="brand">
+        <!-- Icono de cesta dibujado con SVG -->
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9.5V8a4 4 0 0 1 8 0v1.5"/><path d="M4 9.5h16l-1.6 9.1a2 2 0 0 1-2 1.7H7.6a2 2 0 0 1-2-1.7z"/><path d="M9.5 14.5l1.8 1.8 3.4-3.6"/></svg>
+        Cesta
+      </span>
+      <span id="status" class="status" hidden></span>
+      <!-- Botón con la inicial del perfil actual; al pulsarlo se cambia de perfil -->
+      <button id="me-btn" class="avatar avatar--btn" type="button" aria-label="Mi perfil"></button>
+    </header>
+
+    <!-- Aviso que solo sale si aún no has configurado Firebase -->
+    <p id="demo-banner" class="banner" hidden>
+      Modo prueba: la lista solo se guarda en este navegador. Para compartirla con la familia, configura Firebase (lo explica el README).
+    </p>
+
+    <!-- Titular y debajo cuántas cosas faltan -->
+    <div class="hello">
+      <h1 id="headline" class="headline">La compra</h1>
+      <p id="subline" class="subline" aria-live="polite"></p>
+    </div>
+
+    <!-- Pestañas de tiendas (se generan desde app.js) -->
+    <nav class="tabs-wrap" aria-label="Filtrar por tienda">
+      <div id="tabs" class="tabs" role="tablist"></div>
+    </nav>
+
+    <!-- ============ LISTA ============ -->
+    <main id="list" class="list" aria-live="polite"></main>
+
+    <!-- Lo comprado en las últimas 24 h, plegado por defecto -->
+    <details id="recent" class="recent" hidden>
+      <summary id="recent-summary"></summary>
+      <ul id="recent-list" class="recent-list"></ul>
+    </details>
+  </div>
+
+  <!-- Botón flotante principal -->
+  <button id="add-btn" class="fab" type="button">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>
+    Apuntar
+  </button>
+
+  <!-- ============ HOJA PARA APUNTAR / EDITAR ============ -->
+  <!-- <dialog> es nativo: gestiona el foco y la tecla Esc solo -->
+  <dialog id="sheet" class="sheet" aria-labelledby="sheet-title">
+    <form id="sheet-form" method="dialog" autocomplete="off">
+      <span class="grabber" aria-hidden="true"></span>
+      <div class="sheet-head">
+        <h2 id="sheet-title">Apuntar</h2>
+        <!-- Selector Una cosa / Varias -->
+        <div id="mode-switch" class="segmented" role="radiogroup" aria-label="Cuántas cosas">
+          <label><input type="radio" name="mode" value="one" checked /><span>Una</span></label>
+          <label><input type="radio" name="mode" value="many" /><span>Varias</span></label>
+        </div>
+        <button type="button" class="icon-btn" data-close aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <!-- Modo "una cosa" -->
+      <div id="one-fields" class="fields">
+        <label class="field field--grow">
+          <span class="sr-only">Qué hay que comprar</span>
+          <input id="f-name" name="name" type="text" placeholder="¿Qué hay que comprar?" enterkeyhint="done" maxlength="60" />
+        </label>
+        <label class="field field--qty">
+          <span class="sr-only">Cantidad</span>
+          <input id="f-qty" name="qty" type="text" placeholder="Cant." maxlength="12" />
+        </label>
+      </div>
+
+      <!-- Modo "varias cosas": una por línea -->
+      <div id="many-fields" class="fields" hidden>
+        <label class="field field--grow">
+          <span class="sr-only">Varias cosas, una por línea</span>
+          <textarea id="f-many" rows="6" placeholder="Una cosa por línea&#10;2 leche&#10;pan&#10;tomates x6"></textarea>
+        </label>
+      </div>
+
+      <!-- Sugerencias: "Lo de siempre" o coincidencias al escribir -->
+      <div id="suggest" class="suggest" hidden>
+        <p id="suggest-label" class="suggest-label"></p>
+        <div id="suggest-chips" class="chips"></div>
+      </div>
+
+      <fieldset class="where">
+        <legend>Dónde</legend>
+        <div id="store-chips" class="chips chips--stores"></div>
+      </fieldset>
+
+      <p id="sheet-msg" class="sheet-msg" role="status"></p>
+
+      <div class="sheet-actions">
+        <button id="delete-btn" type="button" class="btn btn--ghost-danger" hidden>Borrar</button>
+        <button id="submit-btn" type="submit" class="btn btn--primary">Apuntar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ============ MI PERFIL / CERRAR SESIÓN ============ -->
+  <dialog id="account-dialog" class="sheet sheet--center" aria-labelledby="account-title">
+    <div class="account-head">
+      <span id="account-avatar" class="avatar avatar--big"></span>
+      <h2 id="account-title"></h2>
+    </div>
+    <p class="muted">Lo que apuntas queda firmado con tu nombre para que el resto sepa quién lo pidió.</p>
+    <div class="sheet-actions">
+      <button id="logout-btn" type="button" class="btn btn--ghost-danger">Cerrar sesión</button>
+      <button type="button" class="btn btn--primary" data-close-account>Seguir</button>
+    </div>
+  </dialog>
+
+  <!-- Aviso inferior temporal (con botón Deshacer) -->
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+    <span id="toast-text"></span>
+    <button id="toast-action" type="button" hidden>Deshacer</button>
+  </div>
+
+  <!-- type="module" nos deja usar import/export -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

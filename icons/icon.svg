@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#16191D"/>
+  <!-- asa de la cesta -->
+  <path d="M176 212c0-52 36-92 80-92s80 40 80 92" fill="none" stroke="#F2F4F3" stroke-width="30" stroke-linecap="round"/>
+  <!-- cuerpo de la cesta -->
+  <path d="M112 212h288l-30 172a32 32 0 0 1-31 26H173a32 32 0 0 1-31-26z" fill="#F2F4F3"/>
+  <!-- tick -->
+  <path d="M196 312l42 40 82-86" fill="none" stroke="#13803F" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

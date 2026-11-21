@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// Reglas de seguridad de la base de datos.
+// Solo puede leer y escribir quien tenga sesión (el inicio anónimo
+// que hace la app al abrirse), y solo en las dos colecciones que usa.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // La lista de la compra
+    match /items/{id} {
+      allow read, write: if request.auth != null;
+    }
+
+    // "Lo de siempre" (cuántas veces se apunta cada cosa)
+    match /frecuentes/{id} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
