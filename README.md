@@ -9,6 +9,7 @@ Lo que apunta uno lo ven todos al momento. Al marcar algo como comprado desapare
 - Cada cosa lleva un icono según lo que escribes (🥛 leche, 🥟 ñoquis, 🧻 papel…). Las palabras están en la lista `ICONS` de `app.js`.
 - **Varias**: pega o escribe una lista entera, una cosa por línea (`2 leche`, `huevos x12`).
 - **Lo de siempre**: al abrir Apuntar salen las cosas que más apuntáis. Las vuelves a apuntar con un toque.
+- **Deslizar para borrar**: desliza una cosa hacia la izquierda para borrarla (también con opción de deshacer).
 - **Deshacer**: si marcas algo por error, tienes 5 segundos para deshacerlo. Lo comprado en las últimas 24 h se puede volver a apuntar.
 - Funciona sin cobertura y se sincroniza al volver. Se instala en el móvil como una app.
 

@@ -436,6 +436,11 @@ function renderList(active) {
     if (gen.length) html += `<h2 class="sub-head">También de cualquier sitio</h2><ul class="items">${gen.map(itemHTML).join("")}</ul>`;
   }
 
+  // Pista pequeña hasta que alguien borre deslizando por primera vez
+  if (html && !storage.get("cesta-swipe-ok")) {
+    html += `<p class="swipe-hint">Desliza una cosa hacia la izquierda para borrarla</p>`;
+  }
+
   $("#list").innerHTML =
     html ||
     `<div class="empty">
@@ -450,6 +455,10 @@ function itemHTML(i) {
   const doneCls = pending.has(i.id) ? " is-done" : "";
   const qty = i.qty ? `<span class="qty">${esc(showQty(i.qty))}</span>` : "";
   return `<li class="item${doneCls}" data-id="${esc(i.id)}" style="--c:${storeColor(i.store)}">
+    <span class="item-delete-bg" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 12.5h9l1-12.5M10 11v5M14 11v5"/></svg>Borrar
+    </span>
+    <div class="item-front">
     <button type="button" class="item-body" data-action="edit" aria-label="Editar ${esc(i.name)}">
       ${iconHTML(i.name)}
       <span class="item-text">
@@ -463,6 +472,7 @@ function itemHTML(i) {
     <button type="button" class="check" data-action="buy" aria-label="Marcar ${esc(i.name)} como comprado">
       <span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
     </button>
+    </div>
   </li>`;
 }
 
@@ -522,6 +532,77 @@ function markBought(id, li) {
     if (p) { clearTimeout(p.timer); pending.delete(id); render(); } // aún no se había guardado
     else state.backend.update(id, { done: false, doneAt: null, doneBy: null });
   });
+}
+
+// Borrar algo de la lista (con opción de deshacer)
+function deleteItem(id) {
+  const item = state.items.find((i) => i.id === id);
+  if (!item) return;
+  const { id: _id, ...data } = item;
+  state.backend.remove(id);
+  toast(`Borrado: ${item.name}`, () => state.backend.restore(id, data));
+}
+
+// ---------- Deslizar para borrar ----------
+// Usamos "pointer events", que funcionan igual con el dedo y con el ratón.
+// Si el gesto es horizontal hacia la izquierda, la fila sigue al dedo;
+// si pasa del 35 % del ancho al soltar, se borra. Si no, vuelve a su sitio.
+let suppressClick = false; // para que al soltar no se abra la hoja de editar
+
+function enableSwipe(listEl) {
+  let g = null; // gesto en curso
+
+  listEl.addEventListener("pointerdown", (e) => {
+    const front = e.target.closest(".item-front");
+    if (!front || (e.pointerType === "mouse" && e.button !== 0)) return;
+    const li = front.closest(".item");
+    if (pending.has(li.dataset.id)) return;
+    g = { x: e.clientX, y: e.clientY, dx: 0, front, li, pid: e.pointerId, active: false };
+  });
+
+  listEl.addEventListener("pointermove", (e) => {
+    if (!g || e.pointerId !== g.pid) return;
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    if (!g.active) {
+      // Decidimos si es un deslizamiento horizontal o el usuario está haciendo scroll
+      if (dx < -10 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        g.active = true;
+        g.front.setPointerCapture(e.pointerId);
+        g.li.classList.add("is-swiping");
+      } else if (Math.abs(dy) > 10 || dx > 10) {
+        g = null; // es scroll vertical (o hacia la derecha): no hacemos nada
+        return;
+      } else return;
+    }
+    g.dx = Math.min(0, dx);
+    g.front.style.transform = `translateX(${g.dx}px)`;
+    g.li.classList.toggle("will-delete", -g.dx > g.li.offsetWidth * 0.35);
+  });
+
+  const end = (e) => {
+    if (!g || e.pointerId !== g.pid) return;
+    const s = g;
+    g = null;
+    if (!s.active) return;
+    suppressClick = true;
+    setTimeout(() => (suppressClick = false), 80);
+    s.li.classList.remove("is-swiping");
+    if (-s.dx > s.li.offsetWidth * 0.35) {
+      s.front.style.transform = "translateX(-100%)";      // sale del todo
+      s.li.classList.add("is-removing");                   // y la fila se cierra
+      storage.set("cesta-swipe-ok", "1");                  // ya sabe deslizar: ocultamos la pista
+      setTimeout(() => deleteItem(s.li.dataset.id), 260);
+    } else {
+      s.front.style.transform = "";                        // vuelve a su sitio
+      s.li.classList.remove("will-delete");
+    }
+  };
+  listEl.addEventListener("pointerup", end);
+  listEl.addEventListener("pointercancel", end);
+
+  // Evita que el "click" que llega al soltar abra la hoja de editar
+  listEl.addEventListener("click", (e) => { if (suppressClick) { e.stopPropagation(); e.preventDefault(); } }, true);
 }
 
 // Si cierras la app justo después de marcar, guardamos lo pendiente ya
@@ -794,13 +875,12 @@ function bindEvents() {
   });
 
   $("#delete-btn").addEventListener("click", () => {
-    const item = state.items.find((i) => i.id === state.editingId);
-    if (!item) return;
-    const { id, ...data } = item;
-    state.backend.remove(id);
+    const id = state.editingId;
     sheet.close();
-    toast(`Borrado: ${item.name}`, () => state.backend.restore(id, data));
+    deleteItem(id);
   });
+
+  enableSwipe($("#list"));
 
   // Perfiles
   $("#me-btn").addEventListener("click", openAccount);

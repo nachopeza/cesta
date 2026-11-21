@@ -224,10 +224,52 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
 .item {
   --c: var(--s-general);
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  transition: opacity .3s ease, transform .3s ease, max-height .25s ease;
+  max-height: 140px;
+}
+
+/* Capa de delante: la que se desliza con el dedo */
+.item-front {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--line);
-  transition: opacity .3s ease, transform .3s ease;
+  background: var(--bg);
+  touch-action: pan-y;       /* el navegador hace el scroll vertical; el horizontal lo gestionamos nosotros */
+  transition: transform .22s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.item.is-swiping .item-front { transition: none; }
+
+/* Capa de detrás: aparece al deslizar */
+.item-delete-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-right: 22px;
+  background: #FDECEC;
+  color: var(--danger);
+  font-weight: 800;
+  font-size: 0.95rem;
+  transition: background-color .15s, color .15s;
+}
+.item-delete-bg svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.item.will-delete .item-delete-bg { background: var(--danger); color: #fff; }
+.item.is-removing { max-height: 0; opacity: 0; border-bottom-width: 0; }
+
+.swipe-hint {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-2);
 }
 
 .item-body {
