@@ -278,51 +278,93 @@ function render() {
   renderRecent();
 }
 
-// ---------- Iconos de producto ----------
-// Se elige un emoji según las palabras de lo que se apunta.
-// Para añadir más, pon aquí la palabra SIN tildes y en singular.
-const ICONS = {
-  "papel higienico": "🧻", "papel de cocina": "🧻", "papel de horno": "🧻", "papel film": "🧻", "papel aluminio": "🧻",
-  "pasta de dientes": "🪥", "bolsas de basura": "🗑️", "bolsa de basura": "🗑️", "comida de perro": "🐶", "comida de gato": "🐱",
-  "patatas fritas": "🍟", "tomate frito": "🥫", "frutos secos": "🥜", "pan de molde": "🍞",
-  leche: "🥛", pan: "🍞", baguette: "🥖", barra: "🥖", huevo: "🥚", tomate: "🍅", patata: "🥔", cebolla: "🧅", ajo: "🧄",
-  zanahoria: "🥕", lechuga: "🥬", ensalada: "🥗", espinaca: "🥬", pepino: "🥒", pimiento: "🫑", calabacin: "🥒",
-  brocoli: "🥦", platano: "🍌", manzana: "🍎", pera: "🍐", naranja: "🍊", mandarina: "🍊", limon: "🍋", fresa: "🍓",
-  uva: "🍇", melon: "🍈", sandia: "🍉", pina: "🍍", aguacate: "🥑", kiwi: "🥝", cereza: "🍒", melocoton: "🍑",
-  champinon: "🍄", seta: "🍄", maiz: "🌽", fruta: "🍎", verdura: "🥦", queso: "🧀", yogur: "🥛", mantequilla: "🧈",
-  nata: "🥛", pollo: "🍗", carne: "🥩", ternera: "🥩", cerdo: "🥩", filete: "🥩", lomo: "🥩", hamburguesa: "🍔",
-  salchicha: "🌭", jamon: "🍖", chorizo: "🍖", embutido: "🍖", pavo: "🍗", pescado: "🐟", salmon: "🐟", merluza: "🐟",
-  atun: "🐟", gamba: "🦐", langostino: "🦐", pulpo: "🐙", calamar: "🦑", arroz: "🍚", pasta: "🍝", espagueti: "🍝",
-  macarron: "🍝", noqui: "🥟", gnocchi: "🥟", pizza: "🍕", harina: "🌾", azucar: "🍬", sal: "🧂", aceite: "🫒",
-  aceituna: "🫒", vinagre: "🍶", cafe: "☕", te: "🍵", infusion: "🍵", cacao: "🍫", chocolate: "🍫", galleta: "🍪",
-  cereal: "🥣", muesli: "🥣", avena: "🥣", miel: "🍯", mermelada: "🍯", agua: "💧", zumo: "🧃", refresco: "🥤",
-  coca: "🥤", cerveza: "🍺", vino: "🍷", helado: "🍦", palomita: "🍿", nuez: "🥜", almendra: "🥜", cacahuete: "🥜",
-  garbanzo: "🫘", lenteja: "🫘", alubia: "🫘", judia: "🫛", guisante: "🫛", sopa: "🍜", caldo: "🍲", lata: "🥫",
-  conserva: "🥫", ketchup: "🥫", mayonesa: "🥫", salsa: "🥫", pimienta: "🌶️", especia: "🌶️", bizcocho: "🍰",
-  tarta: "🎂", croissant: "🥐", cruasan: "🥐", magdalena: "🧁", tortilla: "🍳", pizzas: "🍕", hielo: "🧊",
-  detergente: "🧴", suavizante: "🧴", lejia: "🧴", fregasuelos: "🧴", limpiador: "🧴", lavavajillas: "🧽",
-  jabon: "🧼", gel: "🧴", champu: "🧴", crema: "🧴", desodorante: "🧴", cepillo: "🪥", esponja: "🧽", bayeta: "🧽",
-  estropajo: "🧽", servilleta: "🧻", panuelo: "🤧", basura: "🗑️", pila: "🔋", bombilla: "💡", vela: "🕯️",
-  panal: "👶", toallita: "👶", perro: "🐶", gato: "🐱", flor: "💐", planta: "🪴", regalo: "🎁", juguete: "🧸",
-  cuaderno: "📓", boli: "🖊️", taper: "🥡", vaso: "🥤", plato: "🍽️",
-};
-// Probamos primero las claves largas ("papel de horno" antes que "pan")
-const ICON_KEYS = Object.keys(ICONS).sort((a, b) => b.length - a.length);
+// ---------- Categorías e iconos ----------
+// Cada cosa apuntada se clasifica sola en una categoría según sus palabras,
+// y lleva el icono de esa categoría. Las palabras van SIN tildes;
+// vale con el principio de la palabra ("tomate" sirve para "tomates").
+// Para mejorar la clasificación, añade palabras a la lista que toque.
+const CATEGORIES = [
+  { id: "fruta",     name: "Fruta y verdura",   icon: "🥦", words: [
+    "tomate", "patata", "cebolla", "ajo", "zanahoria", "lechuga", "ensalada", "espinaca", "pepino", "pimiento",
+    "calabacin", "calabaza", "brocoli", "coliflor", "puerro", "apio", "berenjena", "rucula", "canonigo",
+    "esparrago", "alcachofa", "remolacha", "jengibre", "perejil", "cilantro", "albahaca", "champinon", "seta",
+    "maiz", "judia verde", "judias verdes", "platano", "manzana", "pera", "naranja", "mandarina", "limon", "lima",
+    "fresa", "uva", "melon", "sandia", "pina", "aguacate", "kiwi", "cereza", "melocoton", "mango", "granada",
+    "ciruela", "arandano", "frambuesa", "coco", "fruta", "verdura", "hortaliza", "boniato", "nectarina", "higo"] },
+  { id: "lacteos",   name: "Lácteos y huevos",  icon: "🥛", words: [
+    "leche", "yogur", "queso", "mantequilla", "nata", "huevo", "kefir", "batido", "requeson", "cuajada",
+    "natilla", "flan", "margarina"] },
+  { id: "carne",     name: "Carne y pescado",   icon: "🥩", words: [
+    "pollo", "carne", "ternera", "cerdo", "filete", "lomo", "hamburguesa", "salchicha", "jamon", "chorizo",
+    "embutido", "fiambre", "salami", "mortadela", "pavo", "pechuga", "muslo", "costilla", "bacon", "beicon",
+    "picada", "pescado", "salmon", "merluza", "bacalao", "dorada", "lubina", "sardina", "boqueron", "gamba",
+    "langostino", "pulpo", "calamar", "sepia", "mejillon", "almeja", "marisco", "cordero", "conejo"] },
+  { id: "pan",       name: "Pan y bollería",    icon: "🥖", words: [
+    "pan", "baguette", "barra", "molde", "croissant", "cruasan", "magdalena", "bollo", "bolleria", "bizcocho",
+    "tostada", "picos", "regana", "napolitana", "donut", "ensaimada", "tarta", "pan rallado"] },
+  { id: "despensa",  name: "Despensa",          icon: "🥫", words: [
+    "arroz", "pasta", "espagueti", "macarron", "fideo", "noqui", "gnocchi", "lasana", "harina", "azucar", "sal",
+    "aceite", "aceituna", "vinagre", "lata", "conserva", "atun", "tomate frito", "tomate triturado", "ketchup",
+    "mayonesa", "salsa", "mostaza", "especia", "pimienta", "oregano", "comino", "pimenton", "caldo", "sopa",
+    "garbanzo", "lenteja", "alubia", "legumbre", "cuscus", "quinoa", "frutos secos", "nuez", "almendra",
+    "cacahuete", "pipa", "patatas fritas", "snack", "palomita", "levadura", "pure", "tortita", "maicena"] },
+  { id: "desayuno",  name: "Desayuno y dulces", icon: "🍪", words: [
+    "cafe", "te", "infusion", "manzanilla", "cacao", "colacao", "cola cao", "chocolate", "galleta", "cereal",
+    "muesli", "avena", "miel", "mermelada", "nocilla", "nutella", "crema de cacao", "gominola", "chuche",
+    "caramelo", "chicle", "bombon", "turron"] },
+  { id: "bebidas",   name: "Bebidas",           icon: "🥤", words: [
+    "agua", "zumo", "refresco", "coca", "fanta", "aquarius", "nestea", "gaseosa", "tonica", "cerveza", "vino",
+    "sidra", "cava", "licor", "ron", "ginebra", "whisky", "bebida", "limonada"] },
+  { id: "congelados", name: "Congelados",       icon: "🧊", words: [
+    "helado", "hielo", "congelado", "pizza", "croqueta", "nugget", "empanadilla", "varitas", "san jacobo",
+    "lasana congelada"] },
+  { id: "higiene",   name: "Higiene personal",  icon: "🧴", words: [
+    "pasta de dientes", "dentifrico", "cepillo de dientes", "hilo dental", "colutorio", "enjuague", "gel",
+    "champu", "acondicionador", "mascarilla", "desodorante", "crema", "colonia", "perfume", "jabon", "compresa",
+    "tampon", "salvaslip", "maquinilla", "cuchilla", "afeitar", "algodon", "bastoncillo", "tirita", "protector solar",
+    "papel higienico", "panuelo", "maquillaje", "laca", "espuma", "pinza", "cortauñas", "cortaunas", "lentilla"] },
+  { id: "limpieza",  name: "Limpieza",          icon: "🧽", words: [
+    "detergente", "suavizante", "jabon de ropa", "jabon lavadora", "lejia", "fregasuelos", "limpiador",
+    "limpiacristales", "quitagrasas", "amoniaco", "lavavajillas", "friegaplatos", "pastillas lavavajillas", "mistol",
+    "bayeta", "estropajo", "esponja", "fregona", "escoba", "recogedor", "guantes", "bolsas de basura",
+    "bolsa de basura", "basura", "ambientador", "insecticida", "cif", "sanytol", "desatascador"] },
+  { id: "casa",      name: "Casa",              icon: "🏠", words: [
+    "papel de horno", "papel de cocina", "papel aluminio", "papel de aluminio", "papel film", "film", "papel",
+    "servilleta", "vela", "pila", "bombilla", "taper", "tupper", "vaso", "plato", "cubierto", "mechero", "cerilla",
+    "bolsa", "regalo", "juguete", "cuaderno", "boli", "planta", "flor", "toalla", "sabana", "cojin", "enchufe",
+    "cable", "cargador", "alargador", "percha", "cesta", "maceta"] },
+  { id: "bebe",      name: "Bebé",              icon: "🍼", words: [
+    "panal", "toallita", "biberon", "potito", "papilla", "chupete"] },
+  { id: "mascotas",  name: "Mascotas",          icon: "🐾", words: [
+    "perro", "gato", "pienso", "arena de gato", "arena", "comida de perro", "comida de gato", "premio perro", "antiparasitario"] },
+];
+const OTHER = { id: "otros", name: "Otros", icon: "🛒" };
 
-function iconFor(name) {
+// Lista plana de [palabra, categoría], con las palabras largas primero
+// ("pasta de dientes" se prueba antes que "pasta")
+const CATEGORY_WORDS = CATEGORIES
+  .flatMap((c) => c.words.map((w) => [norm(w), c]))
+  .sort((a, b) => b[0].length - a[0].length);
+
+function categoryFor(name) {
   const n = norm(name);
   const words = n.split(/[^a-z0-9]+/).filter(Boolean);
-  for (const k of ICON_KEYS) {
+  for (const [k, cat] of CATEGORY_WORDS) {
     if (k.includes(" ")) {
-      if (n.includes(k)) return ICONS[k];
+      if (n.includes(k)) return cat;                       // frase: "papel de horno"
     } else if (k.length <= 3) {
-      // Palabras cortas (sal, te, pan…) tienen que coincidir enteras
-      if (words.some((w) => w === k || w === `${k}s` || w === `${k}es`)) return ICONS[k];
+      if (words.some((w) => w === k || w === `${k}s` || w === `${k}es`)) return cat; // cortas enteras: sal, te, pan
     } else if (words.some((w) => w.startsWith(k))) {
-      return ICONS[k]; // "tomates" empieza por "tomate"
+      return cat;                                          // "tomates" empieza por "tomate"
     }
   }
-  return "🛒";
+  return OTHER;
+}
+
+// HTML del icono con su categoría (el nombre lo leen los lectores de pantalla)
+function iconHTML(name, cls = "emoji") {
+  const c = categoryFor(name);
+  return `<span class="${cls}" role="img" aria-label="${esc(c.name)}" title="${esc(c.name)}">${c.icon}</span>`;
 }
 
 // Texto de la tienda debajo de cada cosa
@@ -409,7 +451,7 @@ function itemHTML(i) {
   const qty = i.qty ? `<span class="qty">${esc(showQty(i.qty))}</span>` : "";
   return `<li class="item${doneCls}" data-id="${esc(i.id)}" style="--c:${storeColor(i.store)}">
     <button type="button" class="item-body" data-action="edit" aria-label="Editar ${esc(i.name)}">
-      <span class="emoji" aria-hidden="true">${iconFor(i.name)}</span>
+      ${iconHTML(i.name)}
       <span class="item-text">
         <span class="item-line"><span class="item-name">${esc(i.name)}</span>${qty}</span>
         <span class="item-meta">
@@ -438,7 +480,7 @@ function renderRecent() {
     .map((i) => {
       const who = profileById(i.doneBy);
       return `<li data-id="${esc(i.id)}">
-        <span class="r-emoji" aria-hidden="true">${iconFor(i.name)}</span>
+        ${iconHTML(i.name, "r-emoji")}
         <span><span class="r-name">${esc(i.name)}</span><br>
         <span class="r-meta">${esc(who ? who.name : "Alguien")} lo compró ${ago(i.doneAt)}, ${esc(storeLabel(i.store))}</span></span>
         <button type="button" data-action="readd">Volver a apuntar</button>
@@ -580,7 +622,7 @@ function renderSuggest() {
   $("#suggest-chips").innerHTML = list
     .map((f) => {
       const where = f.store && f.store !== "general" ? ` <span class="plus">${esc(storeById(f.store).name)}</span>` : "";
-      const ico = `<span class="chip-emoji" aria-hidden="true">${iconFor(f.name)}</span>`;
+      const ico = iconHTML(f.name, "chip-emoji");
       return `<button type="button" class="chip" style="--c:${storeColor(f.store)}" data-key="${esc(f.key)}">${ico}${esc(f.name)}${where}</button>`;
     })
     .join("");
