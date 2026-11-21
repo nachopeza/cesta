@@ -9,7 +9,7 @@
 // si no hay internet, se usa la copia guardada.
 // =========================================================
 
-const CACHE = "cesta-v5";
+const CACHE = "cesta-v6";
 const FILES = [
   "./",
   "./index.html",

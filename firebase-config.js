@@ -13,10 +13,10 @@
 // =========================================================
 
 export const firebaseConfig = {
-  apiKey: "PEGAR_AQUI",
-  authDomain: "PEGAR_AQUI",
-  projectId: "PEGAR_AQUI",
-  storageBucket: "PEGAR_AQUI",
-  messagingSenderId: "PEGAR_AQUI",
-  appId: "PEGAR_AQUI",
+  apiKey: "AIzaSyCDQaxpwuj70vrxzrrvpduxD9SDzPKROic",
+  authDomain: "cesta-1eeb0.firebaseapp.com",
+  projectId: "cesta-1eeb0",
+  storageBucket: "cesta-1eeb0.firebasestorage.app",
+  messagingSenderId: "144661620587",
+  appId: "1:144661620587:web:00584fea53ef0d79ed4e2e",
 };
